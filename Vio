@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Email Consonant Unik</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#f4f7fa;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+}
+.container {
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 15px rgba(0,0,0,0.1);
+    width:100%;
+    max-width:500px;
+}
+button {
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:4px;
+    font-size:16px;
+    cursor:pointer;
+}
+.generate { background:#4CAF50;color:white; }
+.copy { background:#2196F3;color:white;display:none; }
+.email-item {
+    background:#f2f2f2;
+    padding:8px;
+    margin:5px 0;
+    border-radius:4px;
+    font-family:monospace;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>Generator Email Consonant Only</h2>
+
+<input type="text" id="domain" placeholder="contoh: domainanda.com"
+style="width:100%;padding:10px;margin-bottom:10px;">
+
+<input type="number" id="qty" min="1" max="50000" value="10"
+style="width:100%;padding:10px;margin-bottom:10px;">
+
+<button class="generate" onclick="generateEmails()">Generate</button>
+<button class="copy" id="copyBtn">Salin Semua</button>
+
+<div id="list"></div>
+</div>
+
+<script>
+const PASSWORD = "berani007";
+const consonants = "bcdfghjklmnpqrstvwxyz";
+
+function randomConsonantString(length = 8) {
+    let result = "";
+    for (let i = 0; i < length; i++) {
+        result += consonants[Math.floor(Math.random() * consonants.length)];
+    }
+    return result;
+}
+
+function getTodayKey() {
+    return new Date().toISOString().split("T")[0];
+}
+
+function generateEmails() {
+    const domain = document.getElementById("domain").value.trim();
+    const qty = parseInt(document.getElementById("qty").value);
+    const list = document.getElementById("list");
+    const copyBtn = document.getElementById("copyBtn");
+
+    if (!domain) return alert("Domain wajib diisi");
+
+    list.innerHTML = "";
+
+    const todayKey = getTodayKey();
+    let storedData = JSON.parse(localStorage.getItem(todayKey)) || [];
+    let emailSet = new Set(storedData);
+
+    let newEmails = [];
+
+    while (newEmails.length < qty) {
+        const name = randomConsonantString(10); // panjang bisa diubah
+        const email = name + "@" + domain;
+
+        if (!emailSet.has(email)) {
+            emailSet.add(email);
+            newEmails.push(email);
+        }
+    }
+
+    localStorage.setItem(todayKey, JSON.stringify([...emailSet]));
+
+    newEmails.forEach(email => {
+        const div = document.createElement("div");
+        div.className = "email-item";
+        div.textContent = email;
+        list.appendChild(div);
+    });
+
+    copyBtn.style.display = "block";
+    copyBtn.onclick = () => {
+        navigator.clipboard.writeText(newEmails.join("\n"));
+        alert("Email berhasil disalin");
+    };
+
+    downloadCSV(newEmails, domain);
+}
+
+function downloadCSV(emails, domain) {
+    const date = getTodayKey();
+    let csv = "First Name,Last Name,Email Address,Password\n";
+
+    emails.forEach(e => {
+        const name = e.split("@")[0];
+        csv += `${name},User,${e},${PASSWORD}\n`;
+    });
+
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `emails_${domain}_${date}.csv`;
+    link.click();
+}
+</script>
+</body>
+</html>
